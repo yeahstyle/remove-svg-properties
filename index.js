@@ -81,6 +81,7 @@ function error (condition, message) {
 function remove (file, enc, cb) {
 
     var svgMarkup = opt.stylesheets && opt.stylesToInline ? juice(file.contents) : file.contents;
+
     var $ = cheerio.load(svgMarkup, cheerioOpts);
 
     _.forEach(opt.namespaces, function (namespace) {
@@ -113,15 +114,18 @@ function remove (file, enc, cb) {
 
     if (opt.stylesheets && !opt.stylesToInline) {
         var styleDefs = $('style');
+
         _.forEach(styleDefs, function (styleDef) {
 
             styleDef = $(styleDef);
 
             var parsed = css.parse(styleDef.text());
+
             _.forEach(parsed.stylesheet.rules, function (ruleSet) {
                 var totalDeclarations = ruleSet.declarations.length;
                 ruleSet.declarations = _.filter(ruleSet.declarations, function (rule) {
-                    return !_.contains(opt.properties, rule.property);
+                    // small adjustment: if no properties are passed: remove all styles
+                    return opt.properties.length ? !_.contains(opt.properties, rule.property) : false;
                 });
                 counters.stylesheetRules = totalDeclarations - ruleSet.declarations.length;
             });
